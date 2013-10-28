@@ -1,0 +1,27 @@
+jmp 00A ; jump to A, these nop's are just here for future memory storage
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+readH ; read in a value from the input
+store 001 ; store this value in address 001
+readH ; read in a second value
+store 002 ; store in 002
+readH ; read in third value
+store 003 ; store that one as well
+load 001 ; now load the first value into the accumulator
+add 002 ; add the second value to it
+add 003 ; add the third value to that sum
+jmpe 015 ; if that sum equals 0, jump to B
+jmp 00a ; otherwise, go back to A
+load 001 ; sum was 0, now we write each of the 3 input values
+writeH
+load 002
+writeH 002
+load 003
+writeH 003 ; done
