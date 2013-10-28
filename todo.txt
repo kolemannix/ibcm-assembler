@@ -1,0 +1,3 @@
+Allow an IO operation to be combined with an implied load, i.e. : 
+	writeH 001 = 	load 001
+			writeH

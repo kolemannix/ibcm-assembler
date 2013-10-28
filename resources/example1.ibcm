@@ -1,0 +1,25 @@
+jmp 	start
+dw 	0 
+dw 	0
+dw 	0
+dw 	1
+dw 	0
+readH
+store	N
+load 	one
+store 	i
+load 	zero
+store 	s
+load 	N
+sub 	i
+jmpl 	xit
+load 	s
+add 	i
+store 	s
+load 	i
+add 	1
+store 	i
+jmp 	loop
+load 	s
+printH
+halt

@@ -1,0 +1,12 @@
+jmp 00A
+dw 0003
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+nop
+load 001
+writeH

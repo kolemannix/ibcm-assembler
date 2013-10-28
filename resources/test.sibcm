@@ -1,0 +1,14 @@
+jmp 00A
+dw 0003
+dw 0002
+dw 0001
+nop
+nop
+nop
+nop
+nop
+nop
+add 001
+add 002
+add 003
+writeH

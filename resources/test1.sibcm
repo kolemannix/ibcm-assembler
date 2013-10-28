@@ -1,0 +1,5 @@
+add 100
+store 200
+load 300
+add 200
+writeH

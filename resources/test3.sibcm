@@ -1,0 +1,23 @@
+halt
+readH
+readC
+writeH
+writeC
+shiftL 1
+shiftR 3
+rotL 2
+rotR 5
+load 001
+store fff
+add 0f0 ; this is a comment
+sub 0ff ; this is not and will be ignored
+and 100
+or 001
+xor 010
+not
+nop
+jmp ff0
+jmpe abc
+jmpl bac
+brl 00a
+
