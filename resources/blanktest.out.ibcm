@@ -1,0 +1,11 @@
+C00a	000	jmp 00a 	; following lines should be assembled as NOPs
+B000	001		
+B000	002		
+B000	003		
+B000	004		
+B000	005		
+B000	006		
+B000	007		
+B000	008		
+B000	009		
+0000	00a	halt	

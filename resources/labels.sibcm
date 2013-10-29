@@ -1,0 +1,14 @@
+jmp start
+.a
+.b
+.c
+
+
+
+
+
+.start
+add 000
+store a
+load a
+printH

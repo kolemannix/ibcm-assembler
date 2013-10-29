@@ -1,0 +1,11 @@
+jmp 00a ; following lines should be assembled as NOPs
+
+
+
+
+
+
+
+
+
+halt

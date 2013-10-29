@@ -9,4 +9,4 @@ nop
 nop
 nop
 load 001
-writeH
+printH
