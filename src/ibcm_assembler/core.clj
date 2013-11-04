@@ -80,9 +80,9 @@
    (encode instr {}))
   ([instr labelmap]
    (encode-instruction (parse-instr instr) labelmap)))
-
 (defn pad [instr]
   (if (> (count instr) 5) instr (str instr \tab)))
+
 (defn format-instruction [op locn comm labelmap]
   (str (encode op labelmap) \tab locn \tab (pad op) comm))
 
@@ -105,6 +105,6 @@
         instrs (map first (map #(clojure.string/split % #";") lines))
         comments (map (fn [x] (if (= 1 (count x)) "" (str \tab \; (second x)))) (map #(clojure.string/split % #";") lines))]
     (apply str (interpose "\n" (map format-instruction instrs locns comments labels)))))
-
 (defn -main [& args]
   (spit (first args) (assemble (second args))))
+(-main "/Users/knix/Dropbox/UVA/CS2150/lab7/quine.ibcm" "/Users/knix/Dropbox/UVA/CS2150/lab7/quine.sibcm")

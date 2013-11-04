@@ -1,3 +1,5 @@
 Allow an IO operation to be combined with an implied load, i.e. : 
 	writeH 001 = 	load 001
 			writeH
+
+Update example dir with useful examples of labeling (probably the array summation code)
