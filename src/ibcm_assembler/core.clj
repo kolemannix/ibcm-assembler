@@ -1,6 +1,8 @@
 (ns ibcm-assembler.core
   (:gen-class))
 
+;; Go easy on me - this was the first clojure code I ever wrote
+
 (def hex-digits [\0 \1 \2 \3 \4 \5 \6 \7 \8 \9 \A \B \C \D \E \F])
 (def op-names [:halt :io :shift :load :store :add :sub :and :or :xor :not :nop :jmp :jmpe :jmpl :brl])
 (def opmap (zipmap op-names hex-digits))
@@ -13,6 +15,7 @@
   (opmap (keyword op)))
 
 (defn remove-first [input] (apply str (rest input)))
+
 (defn parse-instr [instr]
   "takes an instruction as a string and returns a map representing the instruction"
   (let [instr-seq (clojure.string/split instr #"\s+")
@@ -74,7 +77,6 @@
     (= :a instr-type)
     (let [address (instr :address)
           opcode (instr :opcode)] (str (opmap opcode) (get-address address labels)))))
-
 (defn encode 
   ([instr] 
    (encode instr {}))
@@ -86,16 +88,15 @@
 (defn format-instruction [op locn comm labelmap]
   (str (encode op labelmap) \tab locn \tab (pad op) comm))
 
-(defn make-pair [line locn] [line locn])
 ;; TODO refactor label-map because i know there's about 1,000 better ways to do this
 (defn label-map [lines]
-  (let [with-dots  (->> (map make-pair lines addresses)
-                        (filter #(= (ffirst %) \.))
-                        flatten
-                        (apply hash-map))]
-    (zipmap (map remove-first (keys with-dots)) (vals with-dots))))
-
-;; TODO note, I think I could totally use the state monad here to handle labels
+  (->> (map list lines addresses)  
+       (filter (fn [[k v]] (not (empty? k))))
+       print
+       (filter (fn [[k v]] (= (subs k 0 1) \.)))
+       (map (fn [[k v]] [(subs k 1) v]))
+       (into {})))
+;; TODO note, I think I could use the state monad here to handle labels
 ;; I'm realizing that once I introduce a label map to these functions, I have two
 ;; options: either add an argument, the label map, or pass in the state as a monad
 (defn assemble [x]
