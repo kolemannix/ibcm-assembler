@@ -16,7 +16,6 @@
 
 (expect "B000" (encode ".start"))
 (expect "C000" (encode "jmp 000"))
-(expect {"a" "001", "b" "002", "c" "003", "start" "009"} (label-map (clojure.string/split-lines (slurp "resources/labels.sibcm"))))
 (expect {} (label-map (clojure.string/split-lines (slurp "resources/test2.sibcm"))))
 
 (expect "0000" (encode-instruction {:instr-type :h :opcode :halt} {}))

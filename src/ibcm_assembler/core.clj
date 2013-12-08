@@ -7,7 +7,7 @@
 (def op-names [:halt :io :shift :load :store :add :sub :and :or :xor :not :nop :jmp :jmpe :jmpl :brl])
 (def opmap (zipmap op-names hex-digits))
 (def instruction-type #{:h :io :s :a :d :l})
-(def addresses (map #(format "%03x" %) (range 0 1000)))
+(def addresses (map #(format "%03x" %) (range 1000)))
 
 (defn parse-op 
   "takes a string representing an IBCM operation and returns the appropriate hex digit"
@@ -46,9 +46,8 @@
     (labelmap addr)
     addr))
 
-(defn encode-instruction [instr labels]
+(defn encode-instruction [{instr-type :instr-type :as instr} labels]
   "takes a map created by parse-instr and returns an encoded ibcm instruction"
-  (def instr-type (instr :instr-type))
   (cond
     (= :d instr-type)
     (instr :data)
@@ -76,7 +75,9 @@
         (if rotate? "2C00" "2800")))
     (= :a instr-type)
     (let [address (instr :address)
-          opcode (instr :opcode)] (str (opmap opcode) (get-address address labels)))))
+          opcode (instr :opcode)] (str (opmap opcode) (get-address address labels)))
+    :else nil
+    ))
 (defn encode 
   ([instr] 
    (encode instr {}))
@@ -88,24 +89,24 @@
 (defn format-instruction [op locn comm labelmap]
   (str (encode op labelmap) \tab locn \tab (pad op) comm))
 
-;; TODO refactor label-map because i know there's about 1,000 better ways to do this
 (defn label-map [lines]
   (->> (map list lines addresses)  
        (filter (fn [[k v]] (not (empty? k))))
-       print
        (filter (fn [[k v]] (= (subs k 0 1) \.)))
        (map (fn [[k v]] [(subs k 1) v]))
        (into {})))
 ;; TODO note, I think I could use the state monad here to handle labels
 ;; I'm realizing that once I introduce a label map to these functions, I have two
 ;; options: either add an argument, the label map, or pass in the state as a monad
+;; Solution is to make a little closure over the label map
 (defn assemble [x]
   (let [lines (clojure.string/split-lines (slurp x))
         locns (map #(format "%03x" %) (range 0 1000))
-        labels (repeat (count lines) (label-map lines)) 
+        labels (label-map lines) 
+        label-closure (fn [a b c] (format-instruction a b c labels))
         instrs (map first (map #(clojure.string/split % #";") lines))
         comments (map (fn [x] (if (= 1 (count x)) "" (str \tab \; (second x)))) (map #(clojure.string/split % #";") lines))]
-    (apply str (interpose "\n" (map format-instruction instrs locns comments labels)))))
+    (apply str (interpose "\n" (map label-closure instrs locns comments)))))
+
 (defn -main [& args]
   (spit (first args) (assemble (second args))))
-(-main "/Users/knix/Dropbox/UVA/CS2150/lab7/quine.ibcm" "/Users/knix/Dropbox/UVA/CS2150/lab7/quine.sibcm")
