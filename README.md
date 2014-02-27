@@ -1,6 +1,6 @@
 # ibcm-assembler
 
-IBCM, or Itty-Bitty-Computing-Machine, is "a machine language designed specifically to be taught to undergraduate students." Unfortunately, there exists no assembler for IBCM, so programmers must manuall write the actual bytecode for their programs. I have written a simple clojure tool that will take symbolic IBCM code and assemble it as an executable, adding columns for memory address, symbolic instructions, and comments
+IBCM, or Itty-Bitty-Computing-Machine, is "a machine language designed specifically to be taught to undergraduate students", according to its creators Aaron Bloomfield and William Wulf of the University of Virginia. Unfortunately, there exists no assembler for IBCM, so programmers must manually write the actual bytecode for their programs. I have written a simple clojure tool that will take symbolic IBCM code and assemble it as an executable, adding columns for memory address, symbolic instructions, and comments
 
 ## Usage
 
