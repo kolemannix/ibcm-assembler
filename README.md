@@ -4,13 +4,13 @@ IBCM, or Itty-Bitty-Computing-Machine, is "a machine language designed specifica
 
 ## Usage
 
-java -jar ibcm-assembler "output/file/name" symbolic/ibcm/file"
+java -jar ibcm-assembler input-file output-file
 
-Will store output in a file with specified name and extension .ibcm
+Will store output in a file with specified name and extension .ibcm.
 
 ## Example
 
-Take a look at the example directory: addition.sibcm is a sample input file (sibcm stands for symbolic-IBCM)
+Take a look at the example directory: addition.sibcm is a sample input file (sibcm stands for source-IBCM or symbolic-IBCM)
 addition.ibcm is the output for that file.
 
 ## License
