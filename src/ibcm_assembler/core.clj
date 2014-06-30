@@ -14,32 +14,33 @@
   [op]
   (opmap (keyword op)))
 
-(defn remove-first [input] (apply str (rest input)))
+(defn remove-first [input] (clojure.string/join (rest input)))
 
 (defn parse-instr [instr]
   "takes an instruction as a string and returns a map representing the instruction"
   (let [instr-seq (clojure.string/split instr #"\s+")
         opcode (first instr-seq)]
     (cond 
-      (or (empty? opcode) (= opcode "nop"))
-      {:instr-type :h :opcode :nop}
-      (.startsWith opcode ".")
-      {:instr-type :l}
-      (= opcode "dw")
-      {:instr-type :d :opcode :dw :data (nth instr-seq 1)}
-      (= opcode "halt")
-      {:instr-type :h :opcode :halt}
-      (= opcode "not")
-      {:instr-type :h :opcode :not}
-      (.startsWith opcode "shift")
-      {:instr-type :s :opcode :shift :rotate? false :shift-dir (if (= (nth opcode 5) \L) :left :right) :shift-count (nth instr-seq 1)}
-      (.startsWith opcode "rot")
-      {:instr-type :s :opcode :shift :rotate? true :shift-dir (if (= (nth opcode 3) \L) :left :right) :shift-count (nth instr-seq 1)}
-      (.startsWith opcode "read")
-      {:instr-type :io :opcode :io :io-dir :read :io-format (if (= (nth opcode 4) \H) :hex :ascii)}
-      (.startsWith opcode "print")
-      {:instr-type :io :opcode :io :io-dir :write :io-format (if (= (nth opcode 5) \H) :hex :ascii)}
-      :else {:instr-type :a :opcode (keyword opcode) :address (nth instr-seq 1)})))
+     (or (empty? opcode) (= opcode "nop"))
+     {:instr-type :h :opcode :nop}
+     (.startsWith opcode ".")
+     {:instr-type :l}
+     (= opcode "dw")
+     {:instr-type :d :opcode :dw :data (nth instr-seq 1)}
+     (= opcode "halt")
+     {:instr-type :h :opcode :halt}
+     (= opcode "not")
+     {:instr-type :h :opcode :not}
+     (.startsWith opcode "shift")
+     {:instr-type :s :opcode :shift :rotate? false :shift-dir (if (= (nth opcode 5) \L) :left :right) :shift-count (nth instr-seq 1)}
+     (.startsWith opcode "rot")
+     {:instr-type :s :opcode :shift :rotate? true :shift-dir (if (= (nth opcode 3) \L) :left :right) :shift-count (nth instr-seq 1)}
+     (.startsWith opcode "read")
+     {:instr-type :io :opcode :io :io-dir :read :io-format (if (= (nth opcode 4) \H) :hex :ascii)}
+     (.startsWith opcode "print")
+     {:instr-type :io :opcode :io :io-dir :write :io-format (if (= (nth opcode 5) \H) :hex :ascii)}
+     :else
+     {:instr-type :a :opcode (keyword opcode) :address (nth instr-seq 1)})))
 
 (defn get-address [addr labelmap]
   (if (contains? labelmap addr)
@@ -47,36 +48,36 @@
     addr))
 
 (defn encode-instruction [{instr-type :instr-type :as instr} labels]
-  "takes a map created by parse-instr and returns an encoded ibcm instruction"
+  "Takes a map created by parse-instr and returns an encoded ibcm instruction"
   (case instr-type
     :d (instr :data)
     :l (str (opmap :nop) "000")
     :h (let [opcode (instr :opcode)
              opstr (opmap opcode)]
          (str opstr "000"))
-
     :io (let [io-dir (instr :io-dir)
               io-format (instr :io-format)] 
           (cond 
-            (= io-dir :write)
-            (if (= io-format :hex) "1800" "1C00")
-            (= io-dir :read)
-            (if (= io-format :hex) "1000" "1400")))
+           (= io-dir :write)
+           (if (= io-format :hex) "1800" "1C00")
+           (= io-dir :read)
+           (if (= io-format :hex) "1000" "1400")))
     :s (let [shift-dir (instr :shift-dir)
              rotate? (instr :rotate?)] 
          (cond
-           (= shift-dir :left)
-           (if rotate? "2400" "2000")
-           (= shift-dir :right)
-           (if rotate? "2C00" "2800")))
+          (= shift-dir :left)
+          (if rotate? "2400" "2000")
+          (= shift-dir :right)
+          (if rotate? "2C00" "2800")))
     :a (let [address (instr :address)
-             opcode (instr :opcode)] (str (opmap opcode) (get-address address labels))))
-  )
+             opcode (instr :opcode)] (str (opmap opcode) (get-address address labels)))))
+
 (defn encode 
   ([instr] 
-   (encode instr {}))
+     (encode instr {}))
   ([instr labelmap]
-   (encode-instruction (parse-instr instr) labelmap)))
+     (encode-instruction (parse-instr instr) labelmap)))
+
 (defn pad [instr]
   (if (> (count instr) 5) instr (str instr \tab)))
 
@@ -84,23 +85,23 @@
   (str (encode op labelmap) \tab locn \tab (pad op) comm))
 
 (defn label-map [lines]
-  (->> (map list lines addresses)  
-       (filter (fn [[k v]] (not (empty? k))))
-       (filter (fn [[k v]] (= (subs k 0 1) \.)))
-       (map (fn [[k v]] [(subs k 1) v]))
-       (into {})))
-;; TODO note, I think I could use the state monad here to handle labels
-;; I'm realizing that once I introduce a label map to these functions, I have two
-;; options: either add an argument, the label map, or pass in the state as a monad
-;; Solution is to make a little closure over the label map
+  (into {} (->> (map list lines addresses)  
+                (filter (fn [[k v]] (and
+                                     (not (empty? k))
+                                     (= (subs k 0 1) "."))))
+                (map (fn [[k v]] [(subs k 1) v])))))
+
 (defn assemble [x]
   (let [lines (clojure.string/split-lines (slurp x))
-        locns (map #(format "%03x" %) (range 0 1000))
         labels (label-map lines) 
-        label-closure (fn [a b c] (format-instruction a b c labels))
-        instrs (map first (map #(clojure.string/split % #";") lines))
-        comments (map (fn [x] (if (= 1 (count x)) "" (str \tab \; (second x)))) (map #(clojure.string/split % #";") lines))]
-    (apply str (interpose "\n" (map label-closure instrs locns comments)))))
+        format-fn (fn [a b c] (format-instruction a b c labels))
+        split-lines (map #(clojure.string/split % #";") lines)
+        instrs (map first split-lines)
+        comments (for [comment (map second split-lines)]
+                   (do (println comment) (if comment
+                            (str "\t" ";" comment)
+                            "")))]
+    (clojure.string/join (interpose "\n" (map format-fn instrs addresses comments)))))
 
 (defn -main [& args]
   (spit (first args) (assemble (second args))))

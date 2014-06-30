@@ -1,0 +1,7 @@
+.start
+add 000 ; comment here
+store 001  ;
+         ; Hello
+        ; Comment
+load 002 
+printH
