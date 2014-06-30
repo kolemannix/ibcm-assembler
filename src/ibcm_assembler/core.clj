@@ -48,36 +48,30 @@
 
 (defn encode-instruction [{instr-type :instr-type :as instr} labels]
   "takes a map created by parse-instr and returns an encoded ibcm instruction"
-  (cond
-    (= :d instr-type)
-    (instr :data)
-    (= :l instr-type)
-    (str (opmap :nop) "000")
-    (= :h instr-type) 
-    (let [opcode (instr :opcode)
-          opstr (opmap opcode)]
-      (str opstr "000"))
-    (= :io instr-type)
-    (let [io-dir (instr :io-dir)
-          io-format (instr :io-format)] 
-      (cond 
-        (= io-dir :write)
-        (if (= io-format :hex) "1800" "1C00")
-        (= io-dir :read)
-        (if (= io-format :hex) "1000" "1400")))
-    (= :s instr-type)
-    (let [shift-dir (instr :shift-dir)
-          rotate? (instr :rotate?)] 
-      (cond
-        (= shift-dir :left)
-        (if rotate? "2400" "2000")
-        (= shift-dir :right)
-        (if rotate? "2C00" "2800")))
-    (= :a instr-type)
-    (let [address (instr :address)
-          opcode (instr :opcode)] (str (opmap opcode) (get-address address labels)))
-    :else nil
-    ))
+  (case instr-type
+    :d (instr :data)
+    :l (str (opmap :nop) "000")
+    :h (let [opcode (instr :opcode)
+             opstr (opmap opcode)]
+         (str opstr "000"))
+
+    :io (let [io-dir (instr :io-dir)
+              io-format (instr :io-format)] 
+          (cond 
+            (= io-dir :write)
+            (if (= io-format :hex) "1800" "1C00")
+            (= io-dir :read)
+            (if (= io-format :hex) "1000" "1400")))
+    :s (let [shift-dir (instr :shift-dir)
+             rotate? (instr :rotate?)] 
+         (cond
+           (= shift-dir :left)
+           (if rotate? "2400" "2000")
+           (= shift-dir :right)
+           (if rotate? "2C00" "2800")))
+    :a (let [address (instr :address)
+             opcode (instr :opcode)] (str (opmap opcode) (get-address address labels))))
+  )
 (defn encode 
   ([instr] 
    (encode instr {}))
