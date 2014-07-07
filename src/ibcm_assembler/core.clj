@@ -1,46 +1,14 @@
 (ns ibcm-assembler.core
+  (:require [ibcm-assembler.parse :as parse])
   (:gen-class))
 
 ;; Go easy on me - this was the first clojure code I ever wrote
 
 (def hex-digits [\0 \1 \2 \3 \4 \5 \6 \7 \8 \9 \A \B \C \D \E \F])
-(def op-names [:halt :io :shift :load :store :add :sub :and :or :xor :not :nop :jmp :jmpe :jmpl :brl])
-(def opmap (zipmap op-names hex-digits))
-(def instruction-type #{:h :io :s :a :d :l})
+(def ops [:halt :io :shift :load :store :add :sub :and :or :xor :not :nop :jmp :jmpe :jmpl :brl])
+(def opmap (zipmap ops hex-digits))
+
 (def addresses (map #(format "%03x" %) (range 1000)))
-
-(defn parse-op 
-  "takes a string representing an IBCM operation and returns the appropriate hex digit"
-  [op]
-  (opmap (keyword op)))
-
-(defn remove-first [input] (clojure.string/join (rest input)))
-
-(defn parse-instr [instr]
-  "takes an instruction as a string and returns a map representing the instruction"
-  (let [instr-seq (clojure.string/split instr #"\s+")
-        opcode (first instr-seq)]
-    (cond 
-     (or (empty? opcode) (= opcode "nop"))
-     {:instr-type :h :opcode :nop}
-     (.startsWith opcode ".")
-     {:instr-type :l}
-     (= opcode "dw")
-     {:instr-type :d :opcode :dw :data (nth instr-seq 1)}
-     (= opcode "halt")
-     {:instr-type :h :opcode :halt}
-     (= opcode "not")
-     {:instr-type :h :opcode :not}
-     (.startsWith opcode "shift")
-     {:instr-type :s :opcode :shift :rotate? false :shift-dir (if (= (nth opcode 5) \L) :left :right) :shift-count (nth instr-seq 1)}
-     (.startsWith opcode "rot")
-     {:instr-type :s :opcode :shift :rotate? true :shift-dir (if (= (nth opcode 3) \L) :left :right) :shift-count (nth instr-seq 1)}
-     (.startsWith opcode "read")
-     {:instr-type :io :opcode :io :io-dir :read :io-format (if (= (nth opcode 4) \H) :hex :ascii)}
-     (.startsWith opcode "print")
-     {:instr-type :io :opcode :io :io-dir :write :io-format (if (= (nth opcode 5) \H) :hex :ascii)}
-     :else
-     {:instr-type :a :opcode (keyword opcode) :address (nth instr-seq 1)})))
 
 (defn get-address [addr labelmap]
   (if (contains? labelmap addr)
@@ -73,16 +41,17 @@
              opcode (instr :opcode)] (str (opmap opcode) (get-address address labels)))))
 
 (defn encode 
-  ([instr] 
-     (encode instr {}))
-  ([instr labelmap]
-     (encode-instruction (parse-instr instr) labelmap)))
+  [instr locn labelmap]
+  (if-let [parsed-instruction (try (parse-instruction instr)
+                                   (catch Exception e nil))]
+    (encode-instruction parsed-instruction labelmap)
+    (throw (Exception. (format "Assembler Error on line %s, unrecognized instruction: %s" locn instr)))))
 
 (defn pad [instr]
   (if (> (count instr) 5) instr (str instr \tab)))
 
 (defn format-instruction [op locn comm labelmap]
-  (str (encode op labelmap) \tab locn \tab (pad op) comm))
+  (str (encode op locn labelmap) \tab locn \tab (pad op) comm))
 
 (defn label-map [lines]
   (into {} (->> (map list lines addresses)  
@@ -91,17 +60,19 @@
                                      (= (subs k 0 1) "."))))
                 (map (fn [[k v]] [(subs k 1) v])))))
 
-(defn assemble [x]
-  (let [lines (clojure.string/split-lines (slurp x))
+(defn assemble [source]
+  (let [lines (clojure.string/split-lines source)
         labels (label-map lines) 
         format-fn (fn [a b c] (format-instruction a b c labels))
         split-lines (map #(clojure.string/split % #";") lines)
         instrs (map first split-lines)
         comments (for [comment (map second split-lines)]
-                   (do (println comment) (if comment
-                            (str "\t" ";" comment)
-                            "")))]
-    (clojure.string/join (interpose "\n" (map format-fn instrs addresses comments)))))
+                   (if comment (str "\t" ";" comment) ""))
+        assembled (clojure.string/join (interpose "\n" (map format-fn instrs addresses comments)))]
+    {:source source
+     :assembled assembled}))
 
 (defn -main [& args]
-  (spit (first args) (assemble (second args))))
+  (spit (first args) (assemble (slurp (second args)))))
+
+(println (assemble (slurp "example/addition.sibcm")))

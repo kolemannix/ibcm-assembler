@@ -1,5 +1,0 @@
-load 004 
-add 100
-writeH
-halt
-dw 0003
