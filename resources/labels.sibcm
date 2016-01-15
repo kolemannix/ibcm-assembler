@@ -1,4 +1,4 @@
-jmp start
+jmp start ; comment
 .a
 .b
 .c

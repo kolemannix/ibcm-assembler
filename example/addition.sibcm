@@ -20,8 +20,8 @@ add 003 ; add the third value to that sum
 jmpe 015 ; if that sum equals 0, jump to B
 jmp 00a ; otherwise, go back to A
 load 001 ; sum was 0, now we write each of the 3 input values
-writeH
+printH
 load 002
-writeH 002
+printH 002
 load 003
-writeH 003 ; done
+printH 003 ; done
