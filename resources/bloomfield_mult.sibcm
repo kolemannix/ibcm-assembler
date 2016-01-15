@@ -1,0 +1,29 @@
+jmp start ; jmp past vars
+0000 ; dw 
+.i ; zero
+.s ; zero
+.n ; zero
+.one 001 ; one
+.zero 000 ; zero
+.init ; start
+readH
+store n
+load one
+store i
+load zero
+store s
+.loop
+load n
+sub i
+jmpl xit
+load s
+add i
+store s
+load i
+add one
+store i
+jmp loop
+.xit
+load s
+printH
+halt
