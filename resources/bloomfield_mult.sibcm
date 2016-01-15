@@ -1,5 +1,5 @@
 jmp start ; jmp past vars
-0000 ; dw 
+0000 ; dw
 .i ; zero
 .s ; zero
 .n ; zero

@@ -1,13 +1,13 @@
-(ns ibcm.parse)
-
-(def instruction-types #{:basic :label :io :shift :addressed})
-
-(def blah  "Covers the 6 \"syntactic types\" of instructions in IBCM:
+(ns ibass.parse
+  "Covers the 6 \"syntactic types\" of instructions in IBCM:
               :basic - Instructions with no arguments
               :label - Labels
               :io - IO Instructions
               :shift - Shift Instructions
-              :addressed - Addressed Instructions (ones that take a single address as argument)")
+              :addressed - Addressed Instructions (ones that take a single address as argument)"
+  (:require [clojure.string :as string]))
+
+(def instruction-types #{:basic :label :io :shift :addressed})
 
 (let [address-instructions #{"load" "store" "add" "sub" "and" "or" "xor" "jmp" "jmpe" "jmpl" "brl"}]
   (defn- address-instruction? [op]
@@ -19,7 +19,7 @@
 (def shift-instructions #{"shiftL" "shiftR" "rotL" "rotR"})
 
 (defn- data-instruction? [op]
-  (= (clojure.string/lower-case op) "dw"))
+  (= (string/lower-case op) "dw"))
 
 (def ^:private generic-instr
   {"" {:type :basic :op :nop}
@@ -38,7 +38,7 @@
                                        :op (if (.startsWith op "shift") :shift :rot)
                                        :dir (if (.endsWith op "L") :left :right)
                                        :count arg}
-    (= (clojure.string/lower-case op) "dw") {:type :basic :op :halt :data arg} ;; DW's are technically HALTs
+    (= (string/lower-case op) "dw") {:type :basic :op :halt :data arg} ;; DW's are technically HALTs
     :else (generic-instr op)))
 
 (defn label [s]
@@ -48,7 +48,7 @@
 
 (defn parse [instruction]
   "Turn an instruction into data"
-  (let [instr (clojure.string/split instruction #"\s+")]
+  (let [instr (string/split instruction #"\s+")]
     (if (.startsWith (first instr) ".")
       (if (= (count instr) 3)
         (assoc (parse-simple

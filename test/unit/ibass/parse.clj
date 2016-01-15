@@ -1,5 +1,5 @@
-(ns unit.ibcm.parse
-  (:require [ibcm.parse :refer :all]
+(ns unit.ibass.parse
+  (:require [ibass.parse :refer :all]
             [midje.sweet :refer :all]))
 
 (fact (parse "readA") => {:type :io :op :io :dir :in :format :ascii})
@@ -25,3 +25,5 @@
 
 (fact "Can parse addressed instructions properly"
       (parse "add 001") => {:type :addressed :op :add :address "001"})
+
+

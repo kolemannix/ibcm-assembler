@@ -1,8 +1,7 @@
-(ns ibcm.core
-  (:require [ibcm.parse :as parse])
-  (:gen-class))
-
-;; Go easy on me - this was the first clojure code I ever wrote
+(ns ibass.assemble
+  (:require [ibass.parse :as parse]
+            [clojure.string :as string])
+  #?(:clj (:gen-class)))
 
 (def hex-digits [\0 \1 \2 \3 \4 \5 \6 \7 \8 \9 \A \B \C \D \E \F])
 (def ops [:halt :io :shift :load :store :add :sub :and :or :xor :not :nop :jmp :jmpe :jmpl :brl])
@@ -33,10 +32,10 @@
                  rotate? (= :rot (:op instr))
                  count-char (or (:count instr) 0)] 
              (str (cond
-                (= shift-dir :left)
-                (if rotate? "280" "200")
-                (= shift-dir :right)
-                (if rotate? "2C0" "240")) count-char))
+                    (= shift-dir :left)
+                    (if rotate? "280" "200")
+                    (= shift-dir :right)
+                    (if rotate? "2C0" "240")) count-char))
     :addressed (let [address (instr :address)
                      opcode (:op instr)]
                  (str (opmap opcode) (get-address address labels)))
@@ -46,7 +45,7 @@
 (defn encode 
   [instr line labelmap]
   (if-let [parsed (try (parse/parse instr)
-                                   (catch Exception e nil))]
+                       (catch Exception e nil))]
     (try (encode-instruction parsed labelmap)
          (catch Exception e
            (throw (ex-info "Assembler Error"
@@ -65,7 +64,7 @@
              [(:label instr) line])))
 
 (defn assemble [source]
-  (let [split-lines (map #(clojure.string/split % #";") (clojure.string/split-lines source))
+  (let [split-lines (map #(string/split % #";") (string/split-lines source))
         instrs (map first split-lines)
         parsed (map parse/parse instrs)
         labels (label-map parsed) 
@@ -73,10 +72,5 @@
                    (if comment (str "\t" ";" comment) ""))
         assembled (->> (map (partial format-instruction labels) instrs addresses comments)
                        (interpose "\n" ,,)
-                       (clojure.string/join ,,))]
+                       (string/join ,,))]
     {:source source :assembled assembled}))
-
-(defn -main [& args]
-  (spit (first args) (assemble (slurp (second args)))))
-
-;; (assemble (slurp "resources/labels.sibcm"))

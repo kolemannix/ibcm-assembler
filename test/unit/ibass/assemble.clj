@@ -1,6 +1,6 @@
-(ns unit.ibcm.core
+(ns unit.ibass.assemble
   (:require [midje.sweet :refer :all]
-            [ibcm.core :refer :all]))
+            [ibass.assemble :refer :all]))
 
 (fact (count hex-digits) => (count ops))
 
@@ -39,3 +39,5 @@
 (fact "add 100" => (pad "add 100"))
 
 (fact (-> "resources/test0.sibcm" slurp assemble :assembled) => "5100\t000\tadd 100\n0000\t001\thalt\t")
+
+
